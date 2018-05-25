@@ -1,5 +1,5 @@
-const TARGET_STR = "Vamo zuaaaaaaa";
-const RANDOM_STR_MAX_LEN = 50;
+const TARGET_STR = "this string was produced by evolution";
+const RANDOM_STR_MAX_LEN = 50; // Max length of the strings to be generated
 const MUTATION_RATE = 40;
 const ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const MUTATION_STEPS = 2
@@ -16,6 +16,9 @@ let candidates = []
 let new_g = [];
 
 let running = 1;
+
+let fitnessHistoric = new Array();
+let fitnessMean = new Array();
 
 
 function random_string(len) {
@@ -37,14 +40,20 @@ function create_generation(size) {
 
 function fitness(str) {
 
+  //Get the size of the smallest string (target and actual) 
   let smallest = Math.min.apply(null, [str.length, TARGET_STR.length]);
-  let score = 0;
-  score += Math.abs(str.length - TARGET_STR.length) * 100;
 
+  let score = 0;
+
+  //The score increases as the difference of the size of the strings rises
+  score += Math.abs(str.length - TARGET_STR.length) * 100;
+  //and, for each unit of difference, it goes a hundred times in a for
+  //and for each time in for, it sums to the score the distance in UNICODE
   for (let x = 0; x < smallest; x++) {
     score += Math.abs(str.charCodeAt(x) - TARGET_STR.charCodeAt(x));
   }
 
+  //The bigger the score, the far you're from the correct sentence
   return score;
 
 }
@@ -65,19 +74,22 @@ function get_random_int(min, max) {
 }
 
 function breed(str1, str2) {
+  //Defines cut points and shuffles witn new random int
 
-  let cp_1 = get_random_int(0, str1.length - 1);
-  let cp_2 = get_random_int(cp_1, str1.length - 1);
+  let cut_point_1 = get_random_int(0, str1.length - 1);
+  let cut_point_2 = get_random_int(cut_point_1, str1.length - 1);
 
-  let cp_3 = get_random_int(0, str2.length - 1);
-  let cp_4 = get_random_int(cp_3, str2.length - 1);
+  let cut_point_3 = get_random_int(0, str2.length - 1);
+  let cut_point_4 = get_random_int(cut_point_3, str2.length - 1);
 
-  return (str1.slice(0, cp_1) + str2.slice(cp_3, cp_4) + str1.slice(cp_2, str2.length)).toString();
+  return (str1.slice(0, cut_point_1) + str2.slice(cut_point_3, cut_point_4) + str1.slice(cut_point_2, str2.length)).toString();
 
 }
 
 function create_children(best_candidates) {
 
+  //breeding the last with the first
+  //the second with the last but one...
   best_candidates_children = []
   for (let y = 0; y < ALLOWED_TO_BREED; y++) {
     for (let i = 0; i < (ALLOWED_TO_BREED - y); i++) {
@@ -94,22 +106,40 @@ while (running != 0) {
 
   best_candidates_children = []
 
+  //creates an array with the candidate and its fitness
+  //in the end, new_g is an array with ordered candidate by its fitness
   new_g = candidates
-    .map((c) => [c, fitness(c)])
+    .map((candidate) => [candidate, fitness(candidate)])
     .sort((a, b) => a[1] - b[1]);
 
+  fitnessHistoric.push(new_g[0][1]);
+  let mean = 0;
+  for (i = 0; i < new_g.length; i++) {
+    mean += new_g[i][1];
+  }
+  mean = mean / new_g.length;
+  fitnessMean.push(mean);
+
+  // Best candidates is the best ALLOWED_SURVIVORS of the array
   best_candidates = new_g
     .map((c) => c[0])
     .slice(0, ALLOWED_SURVIVORS);
 
+  //Best candidates is concated with its childrens
   best_candidates.concat(create_children(best_candidates))
 
+  //Then, candidates are the best candidates + its childrens + new random mutated elements
   candidates = best_candidates.concat(create_generation(20)).concat(best_candidates_children);
   candidates = candidates.map((x) => mutate(x));
 
-  postMessage(new_g[0][0]);
+  postMessage({
+    gen: new_g[0][0],
+    fitnessHistoric: fitnessHistoric,
+    fitnessMean: fitnessMean
+  });
 
   if (new_g[0][1] == 0) {
+    //string found
     running = 0;
   }
 
