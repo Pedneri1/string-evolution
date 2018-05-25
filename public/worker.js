@@ -1,4 +1,4 @@
-const TARGET_STR = "Eu QuErO SaBeR QuEm Eh QuE TrAnSa NeSsA PoRra";
+const TARGET_STR = "Vamo zuaaaaaaa";
 const RANDOM_STR_MAX_LEN = 50;
 const MUTATION_RATE = 40;
 const ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -22,7 +22,7 @@ function random_string(len) {
 
   return new Array(len)
     .fill(0)
-    .map((_) => ALPHABET.charAt(get_random_int(0, ALPHABET.length)))
+    .map(() => ALPHABET.charAt(get_random_int(0, ALPHABET.length)))
     .join("")
 
 }
@@ -31,7 +31,7 @@ function create_generation(size) {
 
   return new Array(size)
     .fill(0)
-    .map((_) => random_string(Math.round(get_random_int(5, RANDOM_STR_MAX_LEN))))
+    .map(() => random_string(Math.round(get_random_int(5, RANDOM_STR_MAX_LEN))))
 
 }
 
